@@ -1,0 +1,9 @@
+{
+    "uuid": "elgato-key-light@vidstige.se",
+    "name": "My extension",
+    "description": "This extension does this",
+    "url": "https://vidstige.se/gnome-extensions/",
+    "shell-version": [
+        "3.28"
+    ]              
+}
