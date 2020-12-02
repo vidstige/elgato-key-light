@@ -6,9 +6,21 @@ const Slider = imports.ui.slider;
 const St = imports.gi.St;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gio = imports.gi.Gio;
+const Soup = imports.gi.Soup;
 
-function power(on) {
-        
+
+function power(httpSession, on) {
+    var url = 'http://192.168.1.104:9123/elgato/lights';
+    
+    let message = Soup.Message.new('PUT', url);
+    
+    //'{"numberOfLights":1,"lights":[{"on":1}]}'
+    var body = JSON.stringify({"numberOfLights": 1,"lights":[{"on":on?1:0}]});
+    
+    message.set_request('application/json', 2, body);
+    httpSession.queue_message(message, function (httpSession, message){
+        global.log(message.response_body.data);
+    });
 }
 
 const TimeButton = new Lang.Class({
@@ -42,14 +54,11 @@ const TimeButton = new Lang.Class({
         });
         menuItem.actor.add_actor(cancelButton);
         */
+        let _httpSession = new Soup.Session();
+
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('PopupSwitchMenuItem');
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
-			// We will just change the text content of the label
-			if (value) {
-				label.set_text('On');
-			} else {
-				label.set_text('Off');
-			}
+            power(_httpSession, value);
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
