@@ -7,6 +7,10 @@ const St = imports.gi.St;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gio = imports.gi.Gio;
 
+function power(on) {
+        
+}
+
 const TimeButton = new Lang.Class({
     Name: "TimeButton",
     Extends: PanelMenu.Button,
@@ -30,10 +34,31 @@ const TimeButton = new Lang.Class({
         this._slider = new Slider.Slider(0);
         this._item.actor.add(this.icon);
         this._item.actor.add(this._slider.actor, { expand: true });
-        //var menuItem = new PopupMenu.PopupMenuItem("Salah Time", {});
-        //this._slider = new Slider.Slider(0);
-        //this.menu.add(this._slider)
+        
+        //var menuItem = new PopupMenu.PopupBaseMenuItem();
+        /*let cancelButton = new St.Button({
+            child: new St.Icon({ icon_name: 'appointment-soon' }),
+            style_class: 'system-menu-action',
+        });
+        menuItem.actor.add_actor(cancelButton);
+        */
+        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('PopupSwitchMenuItem');
+        switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
+			// We will just change the text content of the label
+			if (value) {
+				label.set_text('On');
+			} else {
+				label.set_text('Off');
+			}
+		}));
+
+        this.menu.addMenuItem(switchmenuitem);
+        
+
         //this.menu.addMenuItem(menuItem);
+    },
+    toggle: function() {
+
     }
 });
 
