@@ -22,27 +22,29 @@ function debounce(func, wait, options = {priority: GLib.PRIORITY_DEFAULT}) {
     };
 }
 
-function updateElgatoKeyLight(httpSession, light) {
-    var url = 'http://192.168.1.104:9123/elgato/lights';
-    
-    let message = Soup.Message.new('PUT', url);
-    
-    //'{"numberOfLights":1,"lights":[{"on":1}]}'
-    var body = JSON.stringify({"lights": [light]});
-    
-    message.set_request('application/json', 2, body);
-    httpSession.queue_message(message, function (httpSession, message){
-        global.log(message.response_body.data);
-    });
+class ElgatoKeyLight {
+    constructor(url, httpSession) {
+        this._url = url;
+        this._httpSession = httpSession;
+    }
+    update(light) {
+        let message = Soup.Message.new('PUT', this._url + '/elgato/lights');
+        var body = JSON.stringify({"lights": [light]});
+        
+        message.set_request('application/json', 2, body);
+        this._httpSession.queue_message(message, function (httpSession, message){
+            global.log(message.response_body.data);
+        });
+    }
 }
 
 const TimeButton = new Lang.Class({
     Name: "ElgatoKeyLight",
     Extends: PanelMenu.Button,
 
-    _init: function () {
+    _init: function (config) {
         this.parent(null, "ElgatoKeyLight");
-        this._httpSession = new Soup.Session();
+        this._elgatoKeyLight = new ElgatoKeyLight(config.url, new Soup.Session());
 
         let gicon = Gio.icon_new_for_string(Me.path + "/icons/icon.png");
         this.icon = new St.Icon({ gicon: gicon, style_class: 'system-status-icon' });
@@ -72,13 +74,13 @@ const TimeButton = new Lang.Class({
         // On/off switch
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Light', { activate: false });
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
-            updateElgatoKeyLight(this._httpSession, { "on": value ? 1 : 0 });
+            this._elgatoKeyLight.update({ "on": value ? 1 : 0 });
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
     },
     _brightnessChanged: function(slider, value) {
-        updateElgatoKeyLight(this._httpSession, { "brightness": 100*value | 0 });
+        this._elgatoKeyLight.update({ "brightness": 100*value | 0 });
     },
     _temperatureChanged: function(slider, value) {
         //global.log(value);
@@ -93,11 +95,27 @@ function init() {
 const IDENT = "elgato-key-light-vidstige";
 
 function enable() {
-    let indicator = new TimeButton();
-    Main.panel.addToStatusArea(IDENT, indicator);
+    /*
+    // Get the GSchema source so we can lookup our settings
+    let gschema = Gio.SettingsSchemaSource.new_from_directory(
+        Me.dir.get_child('schemas').get_path(),
+        Gio.SettingsSchemaSource.get_default(),
+        false
+    );
+   
+    const schema = 'org.gnome.shell.extensions.elgatokeylight.gsettings';
+    if (gschema.list_schemas(false).indexOf(schema) == -1)
+        throw 'Schema "' + schema + '" not found.';
+    let settings = new Gio.Settings({ settings_schema: gschema.lookup(schema, false) });
+    global.log(settings.get_int('url'));*/
+    let configPath = GLib.build_filenamev([GLib.get_home_dir(), '.config', 'elgato-key-light', 'config.json']);
+    let configRaw = String(GLib.file_get_contents(configPath)[1]);
+    let config = JSON.parse(configRaw);
+    global.log(config);
 
-    // change icon
-    //Main.panel.statusArea["should-be-a-unique-string2"].icon.icon_name = "appointment-soon";
+
+    let indicator = new TimeButton(config);
+    Main.panel.addToStatusArea(IDENT, indicator);
 
     // show
     Main.panel.statusArea[IDENT].actor.visible = true;
