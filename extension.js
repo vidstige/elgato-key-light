@@ -24,11 +24,11 @@ function power(httpSession, on) {
 }
 
 const TimeButton = new Lang.Class({
-    Name: "TimeButton",
+    Name: "ElgatoKeyLight",
     Extends: PanelMenu.Button,
 
     _init: function () {
-        this.parent(null, "TimeButton");
+        this.parent(null, "ElgatoKeyLight");
         this._httpSession = new Soup.Session();
 
         let gicon = Gio.icon_new_for_string(Me.path + "/icons/icon.png");
@@ -64,18 +64,20 @@ const TimeButton = new Lang.Class({
 function init() {
 }
 
+const IDENT = "elgato-key-light-vidstige";
+
 function enable() {
     let indicator = new TimeButton();
-    Main.panel.addToStatusArea("should-be-a-unique-string2", indicator);
+    Main.panel.addToStatusArea(IDENT, indicator);
 
     // change icon
     //Main.panel.statusArea["should-be-a-unique-string2"].icon.icon_name = "appointment-soon";
 
     // show
-    Main.panel.statusArea["should-be-a-unique-string2"].actor.visible = true;
+    Main.panel.statusArea[IDENT].actor.visible = true;
 }
 
 function disable() {
     // you could also track "indicator" and just call indicator.destroy()
-    Main.panel.statusArea["should-be-a-unique-string2"].destroy();
+    Main.panel.statusArea[IDENT].destroy();
 }
