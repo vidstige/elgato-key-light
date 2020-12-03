@@ -7,15 +7,28 @@ const St = imports.gi.St;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
+const GLib = imports.gi.GLib;
 
+function debounce(func, wait, options = {priority: GLib.PRIORITY_DEFAULT}) {
+    let sourceId;
+    return function (...args) {
+        const debouncedFunc = () => {
+            sourceId = null;
+            func.apply(this, args);
+        };
+        if (sourceId)
+            GLib.Source.remove(sourceId);
+        sourceId = GLib.timeout_add(options.priority, wait, debouncedFunc);
+    };
+}
 
-function power(httpSession, on) {
+function updateElgatoKeyLight(httpSession, light) {
     var url = 'http://192.168.1.104:9123/elgato/lights';
     
     let message = Soup.Message.new('PUT', url);
     
     //'{"numberOfLights":1,"lights":[{"on":1}]}'
-    var body = JSON.stringify({"lights":[{"on":on?1:0}]});
+    var body = JSON.stringify({"lights": [light]});
     
     message.set_request('application/json', 2, body);
     httpSession.queue_message(message, function (httpSession, message){
@@ -39,7 +52,7 @@ const TimeButton = new Lang.Class({
         // Brightness slider
         let brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
         let brightnessSlider = new Slider.Slider(0);
-        brightnessSlider.connect('value-changed', Lang.bind(this, this._brightnessChanged))
+        brightnessSlider.connect('value-changed', debounce(this._brightnessChanged.bind(this), 500));
         brightnessItem.actor.add(new St.Icon({
             gicon: Gio.icon_new_for_string(Me.path + "/icons/brightness-64x64.png"),
             style_class: 'popup-menu-icon'}));
@@ -49,7 +62,7 @@ const TimeButton = new Lang.Class({
         // Temperature slider
         let temperatureItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
         let temperatureSlider = new Slider.Slider(0);
-        temperatureSlider.connect('value-changed', Lang.bind(this, this._brightnessChanged))
+        temperatureSlider.connect('value-changed', this._brightnessChanged.bind(this));
         temperatureItem.actor.add(new St.Icon({
             gicon: Gio.icon_new_for_string(Me.path + "/icons/thermometer-64x64.png"),
             style_class: 'popup-menu-icon'}));
@@ -59,13 +72,13 @@ const TimeButton = new Lang.Class({
         // On/off switch
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Light', { activate: false });
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
-            power(this._httpSession, value);
+            updateElgatoKeyLight(this._httpSession, { "on": value ? 1 : 0 });
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
     },
     _brightnessChanged: function(slider, value) {
-        //global.log(value);
+        updateElgatoKeyLight(this._httpSession, { "brightness": 100*value | 0 });
     },
     _temperatureChanged: function(slider, value) {
         //global.log(value);
