@@ -15,7 +15,7 @@ function power(httpSession, on) {
     let message = Soup.Message.new('PUT', url);
     
     //'{"numberOfLights":1,"lights":[{"on":1}]}'
-    var body = JSON.stringify({"numberOfLights": 1,"lights":[{"on":on?1:0}]});
+    var body = JSON.stringify({"lights":[{"on":on?1:0}]});
     
     message.set_request('application/json', 2, body);
     httpSession.queue_message(message, function (httpSession, message){
@@ -29,6 +29,7 @@ const TimeButton = new Lang.Class({
 
     _init: function () {
         this.parent(null, "TimeButton");
+        this._httpSession = new Soup.Session();
 
         // Icon
         this.icon = new St.Icon({
@@ -41,11 +42,14 @@ const TimeButton = new Lang.Class({
         this.actor.add_actor(this.icon);
 
         // Menu
-        this._item = new PopupMenu.PopupBaseMenuItem({ activate: false })
-        this.menu.addMenuItem(this._item);
+        let brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        
         this._slider = new Slider.Slider(0);
-        this._item.actor.add(this.icon);
-        this._item.actor.add(this._slider.actor, { expand: true });
+        this._slider.connect('value-changed', Lang.bind(this, this._sliderChanged))
+        brightnessItem.actor.add(new St.Icon({icon_name: "display-brightness-symbolic"}));
+        brightnessItem.actor.add(this._slider.actor, { expand: true });
+
+        this.menu.addMenuItem(brightnessItem);
         
         //var menuItem = new PopupMenu.PopupBaseMenuItem();
         /*let cancelButton = new St.Button({
@@ -54,11 +58,11 @@ const TimeButton = new Lang.Class({
         });
         menuItem.actor.add_actor(cancelButton);
         */
-        let _httpSession = new Soup.Session();
+        
 
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('PopupSwitchMenuItem');
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
-            power(_httpSession, value);
+            power(this._httpSession, value);
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
@@ -66,8 +70,10 @@ const TimeButton = new Lang.Class({
 
         //this.menu.addMenuItem(menuItem);
     },
+    _sliderChanged: function(slider, value) {
+        //global.log(value);
+    },
     toggle: function() {
-
     }
 });
 
