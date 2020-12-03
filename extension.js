@@ -36,25 +36,38 @@ const TimeButton = new Lang.Class({
 
         this.actor.add_actor(this.icon);
 
-        // Menu
+        // Brightness slider
         let brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        
         let brightnessSlider = new Slider.Slider(0);
-        brightnessSlider.connect('value-changed', Lang.bind(this, this._sliderChanged))
+        brightnessSlider.connect('value-changed', Lang.bind(this, this._brightnessChanged))
         brightnessItem.actor.add(new St.Icon({
-            icon_name: "display-brightness-symbolic",
+            gicon: Gio.icon_new_for_string(Me.path + "/icons/brightness-64x64.png"),
             style_class: 'popup-menu-icon'}));
         brightnessItem.actor.add(brightnessSlider.actor, { expand: true });
         this.menu.addMenuItem(brightnessItem);
-        
-        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('PopupSwitchMenuItem');
+
+        // Temperature slider
+        let temperatureItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        let temperatureSlider = new Slider.Slider(0);
+        temperatureSlider.connect('value-changed', Lang.bind(this, this._brightnessChanged))
+        temperatureItem.actor.add(new St.Icon({
+            gicon: Gio.icon_new_for_string(Me.path + "/icons/thermometer-64x64.png"),
+            style_class: 'popup-menu-icon'}));
+        temperatureItem.actor.add(temperatureSlider.actor, { expand: true });
+        this.menu.addMenuItem(temperatureItem);
+
+        // On/off switch
+        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Light', { activate: false });
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
             power(this._httpSession, value);
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
     },
-    _sliderChanged: function(slider, value) {
+    _brightnessChanged: function(slider, value) {
+        //global.log(value);
+    },
+    _temperatureChanged: function(slider, value) {
         //global.log(value);
     },
     toggle: function() {
