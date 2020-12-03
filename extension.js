@@ -32,8 +32,15 @@ class ElgatoKeyLight {
         var body = JSON.stringify({"lights": [light]});
         
         message.set_request('application/json', 2, body);
-        this._httpSession.queue_message(message, function (httpSession, message){
+        this._httpSession.queue_message(message, function (httpSession, message) {
             global.log(message.response_body.data);
+        });
+    }
+    status(callback) {
+        let message = Soup.Message.new('GET', this._url + '/elgato/lights');
+        this._httpSession.queue_message(message, function (httpSession, message) {
+            const lights = JSON.parse(message.response_body.data).lights;
+            callback(lights[0]);
         });
     }
 }
@@ -52,8 +59,8 @@ const ElgatoKeyLightButton = new Lang.Class({
         this.actor.add_actor(this.icon);
 
         // Brightness slider
-        let brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let brightnessSlider = new Slider.Slider(0);
+        const brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        const brightnessSlider = new Slider.Slider(0);
         brightnessSlider.connect('value-changed', debounce(this._brightnessChanged.bind(this), 500));
         brightnessItem.actor.add(new St.Icon({
             gicon: Gio.icon_new_for_string(Me.path + "/icons/brightness-64x64.png"),
@@ -62,8 +69,8 @@ const ElgatoKeyLightButton = new Lang.Class({
         this.menu.addMenuItem(brightnessItem);
 
         // Temperature slider
-        let temperatureItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
-        let temperatureSlider = new Slider.Slider(0);
+        const temperatureItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
+        const temperatureSlider = new Slider.Slider(0);
         temperatureSlider.connect('value-changed', debounce(this._temperatureChanged.bind(this), 500));
         temperatureItem.actor.add(new St.Icon({
             gicon: Gio.icon_new_for_string(Me.path + "/icons/thermometer-64x64.png"),
@@ -75,13 +82,22 @@ const ElgatoKeyLightButton = new Lang.Class({
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Light', { activate: false });
         switchmenuitem.connect('toggled', this.toggle.bind(this));
         this.menu.addMenuItem(switchmenuitem);
+
+        // Query current status
+        this._elgatoKeyLight.status(function(light) {
+            global.log(light.brightness, light.temperature, light.on);
+            brightnessSlider.setValue(light.brightness / 100.0);
+            const temperature = 1000000 / light.temperature;
+            temperatureSlider.setValue((temperature - 2900) / (7000 - 2900));
+            switchmenuitem.setToggleState(light.on == "1")
+        });
     },
     _brightnessChanged: function(slider, value) {
-        this._elgatoKeyLight.update({ "brightness": 100*value | 0 });
+        this._elgatoKeyLight.update({ "brightness": 100 * value | 0 });
     },
     _temperatureChanged: function(slider, value) {
         const temperature = 2900 + value * (7000 - 2900);
-        this._elgatoKeyLight.update({ "temperature": 987007 / temperature | 0 })
+        this._elgatoKeyLight.update({ "temperature": 1000000 / temperature | 0 })
     },
     toggle: function(object, value) {
         this._elgatoKeyLight.update({ "on": value ? 1 : 0 });
