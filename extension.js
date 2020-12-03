@@ -64,7 +64,7 @@ const ElgatoKeyLightButton = new Lang.Class({
         // Temperature slider
         let temperatureItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
         let temperatureSlider = new Slider.Slider(0);
-        temperatureSlider.connect('value-changed', this._brightnessChanged.bind(this));
+        temperatureSlider.connect('value-changed', debounce(this._temperatureChanged.bind(this), 500));
         temperatureItem.actor.add(new St.Icon({
             gicon: Gio.icon_new_for_string(Me.path + "/icons/thermometer-64x64.png"),
             style_class: 'popup-menu-icon'}));
@@ -83,7 +83,8 @@ const ElgatoKeyLightButton = new Lang.Class({
         this._elgatoKeyLight.update({ "brightness": 100*value | 0 });
     },
     _temperatureChanged: function(slider, value) {
-        //global.log(value);
+        const temperature = 2900 + value * (7000 - 2900);
+        this._elgatoKeyLight.update({ "temperature": 987007 / temperature | 0 })
     },
     toggle: function() {
     }
