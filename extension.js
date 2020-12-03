@@ -73,10 +73,7 @@ const ElgatoKeyLightButton = new Lang.Class({
 
         // On/off switch
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Light', { activate: false });
-        switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
-            this._elgatoKeyLight.update({ "on": value ? 1 : 0 });
-		}));
-
+        switchmenuitem.connect('toggled', this.toggle.bind(this));
         this.menu.addMenuItem(switchmenuitem);
     },
     _brightnessChanged: function(slider, value) {
@@ -86,7 +83,8 @@ const ElgatoKeyLightButton = new Lang.Class({
         const temperature = 2900 + value * (7000 - 2900);
         this._elgatoKeyLight.update({ "temperature": 987007 / temperature | 0 })
     },
-    toggle: function() {
+    toggle: function(object, value) {
+        this._elgatoKeyLight.update({ "on": value ? 1 : 0 });
     }
 });
 
@@ -112,8 +110,6 @@ function enable() {
     let configPath = GLib.build_filenamev([GLib.get_home_dir(), '.config', 'elgato-key-light', 'config.json']);
     let configRaw = String(GLib.file_get_contents(configPath)[1]);
     let config = JSON.parse(configRaw);
-    global.log(config);
-
 
     let indicator = new ElgatoKeyLightButton(config);
     Main.panel.addToStatusArea(IDENT, indicator);
