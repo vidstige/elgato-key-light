@@ -38,7 +38,7 @@ class ElgatoKeyLight {
     }
 }
 
-const TimeButton = new Lang.Class({
+const ElgatoKeyLightButton = new Lang.Class({
     Name: "ElgatoKeyLight",
     Extends: PanelMenu.Button,
 
@@ -114,7 +114,7 @@ function enable() {
     global.log(config);
 
 
-    let indicator = new TimeButton(config);
+    let indicator = new ElgatoKeyLightButton(config);
     Main.panel.addToStatusArea(IDENT, indicator);
 
     // show
