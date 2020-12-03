@@ -1,7 +1,7 @@
 {
     "uuid": "elgato-key-light@vidstige.se",
-    "name": "My extension",
-    "description": "This extension does this",
+    "name": "Elgato Key Light",
+    "description": "On/off Elgato Key Light (Air) and adjust brightness and temperature",
     "url": "https://vidstige.se/gnome-extensions/",
     "shell-version": [
         "3.28"
