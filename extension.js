@@ -31,44 +31,28 @@ const TimeButton = new Lang.Class({
         this.parent(null, "TimeButton");
         this._httpSession = new Soup.Session();
 
-        // Icon
-        this.icon = new St.Icon({
-            icon_name: "appointment-soon",
-            style_class: "system-status-icon"
-        });
-        //let gicon = Gio.icon_new_for_string(Me.path + "/icons/icon.png");
-        //this.icon = new St.Icon({ gicon });
+        let gicon = Gio.icon_new_for_string(Me.path + "/icons/icon.png");
+        this.icon = new St.Icon({ gicon: gicon, style_class: 'system-status-icon' });
 
         this.actor.add_actor(this.icon);
 
         // Menu
         let brightnessItem = new PopupMenu.PopupBaseMenuItem({ activate: false });
         
-        this._slider = new Slider.Slider(0);
-        this._slider.connect('value-changed', Lang.bind(this, this._sliderChanged))
-        brightnessItem.actor.add(new St.Icon({icon_name: "display-brightness-symbolic"}));
-        brightnessItem.actor.add(this._slider.actor, { expand: true });
-
+        let brightnessSlider = new Slider.Slider(0);
+        brightnessSlider.connect('value-changed', Lang.bind(this, this._sliderChanged))
+        brightnessItem.actor.add(new St.Icon({
+            icon_name: "display-brightness-symbolic",
+            style_class: 'popup-menu-icon'}));
+        brightnessItem.actor.add(brightnessSlider.actor, { expand: true });
         this.menu.addMenuItem(brightnessItem);
         
-        //var menuItem = new PopupMenu.PopupBaseMenuItem();
-        /*let cancelButton = new St.Button({
-            child: new St.Icon({ icon_name: 'appointment-soon' }),
-            style_class: 'system-menu-action',
-        });
-        menuItem.actor.add_actor(cancelButton);
-        */
-        
-
         let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('PopupSwitchMenuItem');
         switchmenuitem.connect('toggled', Lang.bind(this, function(object, value) {
             power(this._httpSession, value);
 		}));
 
         this.menu.addMenuItem(switchmenuitem);
-        
-
-        //this.menu.addMenuItem(menuItem);
     },
     _sliderChanged: function(slider, value) {
         //global.log(value);
